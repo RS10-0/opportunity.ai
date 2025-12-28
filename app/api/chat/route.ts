@@ -12,11 +12,19 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "system",
-          content: "You are a business scout. Return ONLY a JSON object with a key named 'opportunities'. Each opportunity must have 'title', 'desc', and 'link'."
+          content: `You are a professional Business Lead Scout. 
+          The user needs REAL ways to make money, not generic advice.
+          
+          For every suggestion:
+          1. Identify a specific platform (like 'Contra', 'Wellfound', or 'Gigster') instead of just 'freelance sites'.
+          2. Provide a specific 'Arbitrage' idea (e.g., 'Using AI to automate lead gen for local Realtors').
+          3. Give a direct link to the high-paying portal or the specific strategy page.
+          
+          Format as JSON: {"opportunities": [{"title": "", "desc": "", "link": ""}]}`
         },
         {
           role: "user",
-          content: `Skills: ${skills}, Time: ${time}hrs/week, Budget: $${money}`
+          content: `My skills: ${skills}. I have ${time} hours/week and a budget of $${money}. Find me 3 high-intent money-making leads.`
         }
       ],
       response_format: { type: "json_object" }
@@ -24,8 +32,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(JSON.parse(response.choices[0].message.content!));
   } catch (error) {
-    // This helps us see the error in Vercel Logs
-    console.error("OpenAI Error:", error);
-    return NextResponse.json({ error: "AI failed" }, { status: 500 });
+    return NextResponse.json({ error: "AI scout is offline" }, { status: 500 });
   }
 }
