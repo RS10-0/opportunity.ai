@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
   try {
@@ -14,11 +12,11 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "system",
-          content: "You are a career strategist. Provide 3 specific business opportunities based on the user's input. Return valid JSON only with 'opportunities' as the key."
+          content: "You are a business scout. Return ONLY a JSON object with a key named 'opportunities'. Each opportunity must have 'title', 'desc', and 'link'."
         },
         {
           role: "user",
-          content: `Skills: ${skills}, Time: ${time}, Budget: ${money}`
+          content: `Skills: ${skills}, Time: ${time}hrs/week, Budget: $${money}`
         }
       ],
       response_format: { type: "json_object" }
@@ -26,6 +24,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json(JSON.parse(response.choices[0].message.content!));
   } catch (error) {
-    return NextResponse.json({ error: "AI Brain failed" }, { status: 500 });
+    // This helps us see the error in Vercel Logs
+    console.error("OpenAI Error:", error);
+    return NextResponse.json({ error: "AI failed" }, { status: 500 });
   }
 }
