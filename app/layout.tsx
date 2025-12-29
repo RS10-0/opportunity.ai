@@ -1,17 +1,19 @@
 import './globals.css'
-import { Inter } from 'next/font/google'
+import type { Metadata } from 'next'
 
-const inter = Inter({ subsets: ['latin'] })
-
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Universal Converter ⭐',
-  description: 'Paste anything. Choose what it becomes.',
+  description: 'The instant transformation tool for messy text, notes, and homework.',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   )
 }
