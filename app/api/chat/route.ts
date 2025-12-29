@@ -5,33 +5,30 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
   try {
-    const { skills, time, money } = await req.json();
+    const { text, mode } = await req.json();
+
+    // Define the different "Spells" based on what the user picks
+    const prompts: Record<string, string> = {
+      summary: "Summarize this into 3 clear bullet points.",
+      fiveyearold: "Explain this like I am 5 years old.",
+      flashcards: "Turn this text into a list of Front/Back flashcards.",
+      professional: "Rewrite this to sound highly professional and corporate.",
+      todo: "Extract all actionable tasks from this text and turn them into a checkbox to-do list.",
+      smart: "Analyze this text. If it is long, summarize it. If it is messy, clean it. If it is a task, organize it."
+    };
+
+    const selectedPrompt = prompts[mode] || prompts['smart'];
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        {
-          role: "system",
-          content: `You are a professional Business Lead Scout. 
-          The user needs REAL ways to make money, not generic advice.
-          
-          For every suggestion:
-          1. Identify a specific platform (like 'Contra', 'Wellfound', or 'Gigster') instead of just 'freelance sites'.
-          2. Provide a specific 'Arbitrage' idea (e.g., 'Using AI to automate lead gen for local Realtors').
-          3. Give a direct link to the high-paying portal or the specific strategy page.
-          
-          Format as JSON: {"opportunities": [{"title": "", "desc": "", "link": ""}]}`
-        },
-        {
-          role: "user",
-          content: `My skills: ${skills}. I have ${time} hours/week and a budget of $${money}. Find me 3 high-intent money-making leads.`
-        }
+        { role: "system", content: `You are the Universal Converter. ${selectedPrompt}` },
+        { role: "user", content: text }
       ],
-      response_format: { type: "json_object" }
     });
 
-    return NextResponse.json(JSON.parse(response.choices[0].message.content!));
+    return NextResponse.json({ result: response.choices[0].message.content });
   } catch (error) {
-    return NextResponse.json({ error: "AI scout is offline" }, { status: 500 });
+    return NextResponse.json({ error: "Conversion failed" }, { status: 500 });
   }
 }
