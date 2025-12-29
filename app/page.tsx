@@ -6,55 +6,91 @@ export default function UniversalConverter() {
   const [result, setResult] = useState('');
   const [mode, setMode] = useState('smart');
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleConvert = async () => {
+    if (!text) return alert("Paste some text first!");
     setLoading(true);
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      body: JSON.stringify({ text, mode }),
-    });
-    const data = await res.json();
-    setResult(data.result);
+    setResult('');
+    
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, mode }),
+      });
+      const data = await res.json();
+      setResult(data.result || "Error: Something went wrong.");
+    } catch (err) {
+      setResult("Error: Failed to connect to the brain.");
+    }
     setLoading(false);
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(result);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="max-w-3xl mx-auto p-10 font-sans">
-      <h1 className="text-4xl font-bold mb-2">Universal Converter ⭐</h1>
-      <p className="text-gray-500 mb-8">Paste anything. Choose what it becomes.</p>
+    <main className="min-h-screen p-6 md:p-20 flex flex-col items-center">
+      <div className="w-full max-w-3xl">
+        <h1 className="text-5xl font-black mb-2 italic">UNIVERSAL CONVERTER ⭐</h1>
+        <p className="text-gray-500 text-lg mb-8 uppercase tracking-widest font-bold">Paste Anything → Convert Instantly</p>
 
-      <textarea 
-        className="w-full h-64 p-4 border-2 border-black rounded-xl mb-4 text-lg"
-        placeholder="Paste your messy notes, articles, or homework here..."
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
+        {/* Input Area */}
+        <textarea 
+          className="w-full h-64 p-6 border-4 border-black rounded-2xl tool-shadow text-lg focus:outline-none mb-6 resize-none"
+          placeholder="Paste messy notes, emails, or study material here..."
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
 
-      <div className="flex flex-wrap gap-2 mb-6">
-        {['smart', 'summary', 'fiveyearold', 'flashcards', 'professional', 'todo'].map((m) => (
-          <button 
-            key={m}
-            onClick={() => setMode(m)}
-            className={`px-4 py-2 rounded-full border-2 border-black font-bold uppercase text-xs ${mode === m ? 'bg-black text-white' : 'bg-white'}`}
-          >
-            {m.replace('fiveyearold', 'Explain Like I\'m 5')}
-          </button>
-        ))}
-      </div>
-
-      <button 
-        onClick={handleConvert}
-        className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-xl hover:bg-blue-700 transition"
-      >
-        {loading ? "CONVERTING..." : "CONVERT →"}
-      </button>
-
-      {result && (
-        <div className="mt-10 p-6 bg-gray-100 rounded-xl border-2 border-dashed border-gray-400 whitespace-pre-wrap">
-          <h2 className="font-bold mb-4 uppercase text-gray-400">Result:</h2>
-          {result}
+        {/* Mode Selectors */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          {[
+            { id: 'smart', label: '✨ Smart Mode' },
+            { id: 'summary', label: 'Summary' },
+            { id: 'study', label: 'Study Guide' },
+            { id: 'professional', label: 'Pro-Rewrite' },
+            { id: 'todo', label: 'To-Do List' }
+          ].map((m) => (
+            <button 
+              key={m.id}
+              onClick={() => setMode(m.id)}
+              className={`px-5 py-2 rounded-full border-2 border-black font-black uppercase text-xs transition-colors ${mode === m.id ? 'bg-black text-white' : 'bg-white hover:bg-gray-100'}`}
+            >
+              {m.label}
+            </button>
+          ))}
         </div>
-      )}
-    </div>
+
+        {/* Action Button */}
+        <button 
+          onClick={handleConvert}
+          disabled={loading}
+          className="w-full bg-blue-500 text-white py-5 rounded-2xl font-black text-2xl border-4 border-black tool-shadow transition-all disabled:opacity-50"
+        >
+          {loading ? "PROCESSING..." : "CONVERT NOW →"}
+        </button>
+
+        {/* Result Area */}
+        {result && (
+          <div className="mt-12 p-8 bg-white border-4 border-black rounded-2xl tool-shadow relative">
+             <button 
+               onClick={copyToClipboard}
+               className="absolute top-4 right-4 bg-gray-100 hover:bg-gray-200 px-4 py-2 border-2 border-black rounded-lg text-xs font-black uppercase transition-all"
+             >
+               {copied ? "COPIED!" : "COPY"}
+             </button>
+            <h2 className="text-xs font-black text-gray-300 uppercase tracking-widest mb-4">Final Result</h2>
+            <div className="text-lg whitespace-pre-wrap leading-relaxed font-medium">
+              {result}
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
